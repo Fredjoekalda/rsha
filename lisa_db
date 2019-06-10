@@ -1,0 +1,30 @@
+#!/bin/bash
+#kontrollib, kas mysql on olemas masinas
+echo "Kas MySQL on olemas? (y/n)"
+read -e mysql
+if [ "$mysql" == n ]; then #kui mysql-i pole, siis
+        echo "Installin MYSQL"
+        sudo apt-get install mysql-server; #installib MySqli
+        mysql_secure_installation;
+	sudo ufw allow mysql
+clear
+	echo "Install lopuleviidud, Restardi script palun"
+else
+echo "Sisesta root parool" #küsib root parooli
+read -s pwd
+echo "Sisesta andmebaasi nimi" #küsib andmebaasi nime
+read andmebaas
+echo "Sisesta andmebaasi kasutajanimi" #küsib andmebaasi kasutajanime
+read kasutaja
+echo "Sisesta kasutaja parool" #küsib kasutaja parooli
+read -s parool
+echo "Sisesta veebiserveri IP" #küsib veebiserveri ip-aadressi
+read ipadr
+mysql -u root -p$pwd --execute="CREATE DATABASE $andmebaas; #loob antud nimega andmebaasi
+CREATE USER '$kasutaja'@'localhost' IDENTIFIED BY '$parool'; #loob uue kasutaja
+GRANT ALL PRIVILEGES ON $andmebaas.* TO '$kasutaja'@'localhost'; #annab kasutajale õigused
+CREATE USER '$kasutaja'@'$ipadr' IDENTIFIED BY '$parool'; #teeb uue kasutaja
+GRANT ALL PRIVILEGES ON $andmebaas.* TO '$kasutaja'@'$ipadr'; #annab õigused
+FLUSH PRIVILEGES;"
+perl -pi -e "s/0.0.0.0/$ipadr/g" /etc/mysql/mysql.conf.d/mysqld.cnf
+fi
